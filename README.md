@@ -1,4 +1,4 @@
-# Implicit: Gaze-Triggered AI Assistance for Code Review in the JetBrains IDE
+# Implicit Gaze-Triggered AI Assistance for Code Review in the JetBrains IDE
 
 > **Prototype** — This plugin was AI-generated and may contain errors or incomplete functionality. It is a proof-of-concept prototype developed as part of the **Implicit** project.
 
