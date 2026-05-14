@@ -15,6 +15,18 @@ The current mode is shown in the status bar as `● Implicit: Reading` or `● I
 
 ---
 
+## Screenshots
+
+**Explaining mode** — mouse dwells on a line and GPT-4o-mini explains it inline:
+
+![Explaining mode](docs/screenshot-explaining.png)
+
+**Reading report** — click the status bar widget to see coverage and functions with prolonged focus:
+
+![Reading report](docs/screenshot-reading-report.png)
+
+---
+
 ## Inspired by CodeGRITS
 
 This plugin draws its core concept from [**CodeGRITS**](https://github.com/codegrits/CodeGRITS) — an open-source research toolkit that captures real eye-tracking and interaction data from developers inside JetBrains IDEs.
