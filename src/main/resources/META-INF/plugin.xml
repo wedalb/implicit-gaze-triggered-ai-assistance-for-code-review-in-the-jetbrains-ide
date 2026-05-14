@@ -1,0 +1,36 @@
+<idea-plugin>
+    <id>io.github.gazehighlighter</id>
+    <name>GazeAIDE</name>
+    <version>0.2.0</version>
+    <vendor>Research</vendor>
+
+    <description><![CDATA[
+        Simulates eye-tracking gaze using the mouse cursor — inspired by the
+        <a href="https://github.com/codegrits/CodeGRITS">CodeGRITS</a> toolkit.<br/><br/>
+        <b>Reading mode</b> — mouse is moving; a circle marks the current line in the gutter.<br/>
+        <b>Explaining mode</b> — mouse rests 3 s; the line is highlighted and GPT-4o-mini
+        explains it inline using the surrounding function as context.<br/><br/>
+        Requires <code>OPENAI_API_KEY</code> environment variable for AI explanations.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends optional="true" config-file="codegrits-compat.xml">io.github.codegrits</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+
+        <!-- Startup: attach mouse listeners to all editors -->
+        <postStartupActivity
+            implementation="io.github.gazehighlighter.GazeHighlighterStartupActivity"/>
+
+        <!-- Project service: owns the current gaze mode -->
+        <projectService
+            serviceImplementation="io.github.gazehighlighter.GazeModeService"/>
+
+        <!-- Status bar widget: ● GAZEAIDE: Reading / Explaining -->
+        <statusBarWidgetFactory
+            id="GazeAIDE"
+            implementation="io.github.gazehighlighter.GazeStatusBarWidgetFactory"
+            order="first"/>
+
+    </extensions>
+</idea-plugin>

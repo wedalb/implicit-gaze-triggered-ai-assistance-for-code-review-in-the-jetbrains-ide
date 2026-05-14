@@ -1,0 +1,7 @@
+<idea-plugin>
+    <!--
+        Loaded only when CodeGRITS (io.github.codegrits) is also installed.
+        Placeholder for future integration with CodeGRITS's RealtimeDataImpl API,
+        e.g. synchronising gaze highlights with CodeGRITS session recordings.
+    -->
+</idea-plugin>
