@@ -1,15 +1,17 @@
 <idea-plugin>
     <id>io.github.gazehighlighter</id>
-    <name>GazeAIDE</name>
+    <name>Implicit: Gaze-Triggered AI Assistance for Code Review</name>
     <version>0.2.0</version>
     <vendor>Research</vendor>
 
     <description><![CDATA[
-        Simulates eye-tracking gaze using the mouse cursor — inspired by the
-        <a href="https://github.com/codegrits/CodeGRITS">CodeGRITS</a> toolkit.<br/><br/>
+        Gaze-triggered AI assistance for code review, inspired by the
+        <a href="https://github.com/codegrits/CodeGRITS">CodeGRITS</a> research toolkit.<br/><br/>
+        Simulates eye-tracking using mouse dwell time as a proxy for gaze.<br/><br/>
         <b>Reading mode</b> — mouse is moving; a circle marks the current line in the gutter.<br/>
         <b>Explaining mode</b> — mouse rests 3 s; the line is highlighted and GPT-4o-mini
         explains it inline using the surrounding function as context.<br/><br/>
+        Prototype for the <b>Implicit</b> project. AI-generated — may contain errors.<br/>
         Requires <code>OPENAI_API_KEY</code> environment variable for AI explanations.
     ]]></description>
 
@@ -28,7 +30,7 @@
 
         <!-- Status bar widget: ● GAZEAIDE: Reading / Explaining -->
         <statusBarWidgetFactory
-            id="GazeAIDE"
+            id="Implicit"
             implementation="io.github.gazehighlighter.GazeStatusBarWidgetFactory"
             order="first"/>
 

@@ -1,8 +1,8 @@
-# GazeAIDE — PyCharm Plugin
+# Implicit: Gaze-Triggered AI Assistance for Code Review in the JetBrains IDE
 
 > **Prototype** — This plugin was AI-generated and may contain errors or incomplete functionality. It is a proof-of-concept prototype developed as part of the **Implicit** project.
 
-GazeAIDE simulates eye-tracking gaze behaviour using the mouse cursor inside PyCharm (and any JetBrains IDE). It is inspired by the [CodeGRITS](https://github.com/codegrits/CodeGRITS) research toolkit.
+This plugin simulates eye-tracking gaze behaviour using the mouse cursor inside PyCharm (and any JetBrains IDE). When your mouse lingers on a line of code, it triggers an AI explanation — creating a lightweight, implicit code-review experience without any explicit user action.
 
 ## How it works
 
@@ -11,7 +11,19 @@ GazeAIDE simulates eye-tracking gaze behaviour using the mouse cursor inside PyC
 | **Reading** | Mouse is moving | A circle appears in the gutter next to the current line |
 | **Explaining** | Mouse rests on a line for 3 seconds | The line is highlighted and GPT-4o-mini explains it inline, using the surrounding function as context |
 
-The current mode is shown in the status bar as `● GAZEAIDE: Reading` or `● GAZEAIDE: Explaining`. Clicking it opens a reading-coverage report.
+The current mode is shown in the status bar as `● Implicit: Reading` or `● Implicit: Explaining`. Clicking it opens a reading-coverage report.
+
+---
+
+## Inspired by CodeGRITS
+
+This plugin draws its core concept from [**CodeGRITS**](https://github.com/codegrits/CodeGRITS) — an open-source research toolkit that captures real eye-tracking and interaction data from developers inside JetBrains IDEs.
+
+CodeGRITS records where a developer's gaze actually lands on code (using a physical eye tracker), along with IDE actions and navigation, to support empirical software engineering research. It established the idea that **where you look while reading code is meaningful signal** — which lines draw attention, which are skimmed, and which cause a developer to pause.
+
+This plugin adapts that idea without requiring a hardware eye tracker: it uses **mouse dwell time as a proxy for gaze**, on the assumption that a developer hovering over a line is implicitly focusing on it. When that implicit focus is detected, an LLM explanation is triggered — making AI assistance emerge naturally from reading behaviour rather than from an explicit command.
+
+The optional dependency on the CodeGRITS plugin (`io.github.codegrits`) is a placeholder for a future integration that would synchronise gaze highlights with live CodeGRITS session recordings.
 
 ---
 
@@ -29,8 +41,8 @@ The current mode is shown in the status bar as `● GAZEAIDE: Reading` or `● G
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/heidialbarazi/gazeaide.git
-cd gazeaide
+git clone https://github.com/wedalb/implicit-gaze.git
+cd implicit-gaze
 ```
 
 ### 2. Set your OpenAI API key
@@ -63,14 +75,14 @@ The script automatically detects PyCharm's bundled JDK. If it cannot find it, se
 This produces a distributable ZIP at:
 
 ```
-build/distributions/gaze-highlighter-0.1.0.zip
+build/distributions/implicit-gaze-0.1.0.zip
 ```
 
 ### 5. Install in PyCharm
 
 1. Open PyCharm → **Settings / Preferences** → **Plugins**
 2. Click the gear icon ⚙ → **Install Plugin from Disk…**
-3. Select `build/distributions/gaze-highlighter-0.1.0.zip`
+3. Select `build/distributions/implicit-gaze-0.1.0.zip`
 4. Restart PyCharm when prompted
 
 ---

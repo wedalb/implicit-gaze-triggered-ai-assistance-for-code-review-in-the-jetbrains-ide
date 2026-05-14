@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  * JetBrains-style reading coverage report.
- * Open by clicking the GazeAIDE status-bar widget.
+ * Open by clicking the Implicit status-bar widget.
  */
 public class ReadingReportDialog extends DialogWrapper {
 
@@ -36,7 +36,7 @@ public class ReadingReportDialog extends DialogWrapper {
         this.heavy     = heavy;
         this.explained = explained;
         this.hotspots  = hotspots;
-        setTitle("GazeAIDE — Reading Report");
+        setTitle("Implicit — Reading Report");
         setResizable(false);
         init();
     }

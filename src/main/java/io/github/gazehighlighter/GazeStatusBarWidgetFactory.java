@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 public class GazeStatusBarWidgetFactory implements StatusBarWidgetFactory {
 
     @Override public @NotNull String getId() { return GazeStatusBarWidget.ID; }
-    @Override public @NotNull String getDisplayName() { return "GazeAIDE Mode"; }
+    @Override public @NotNull String getDisplayName() { return "Implicit Mode"; }
     @Override public boolean isAvailable(@NotNull Project project) { return true; }
 
     @Override

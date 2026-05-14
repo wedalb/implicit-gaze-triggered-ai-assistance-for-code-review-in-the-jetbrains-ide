@@ -20,7 +20,7 @@ import java.awt.event.MouseEvent;
  */
 public class GazeStatusBarWidget implements CustomStatusBarWidget {
 
-    public static final String ID = "GazeAIDE";
+    public static final String ID = "Implicit";
 
     private static final String GREEN_HEX  = "#32C864";
     private static final String ACCENT_HEX = "#5AAFFF";
@@ -35,7 +35,7 @@ public class GazeStatusBarWidget implements CustomStatusBarWidget {
         label.setOpaque(false);
         label.setFont(label.getFont().deriveFont(Font.PLAIN, 11f));
         label.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 6));
-        label.setToolTipText("Click to view GazeAIDE reading report");
+        label.setToolTipText("Click to view Implicit reading report");
 
         label.addMouseListener(new MouseAdapter() {
             @Override
@@ -62,7 +62,7 @@ public class GazeStatusBarWidget implements CustomStatusBarWidget {
                     ? "<b><font color='" + ACCENT_HEX + "'>" + mode.label + "</font></b>"
                     : mode.label;
             label.setText("<html><font color='" + GREEN_HEX + "'>&#9679;</font>"
-                    + "&nbsp;<b>GAZEAIDE:</b>&nbsp;" + modeHtml + "</html>");
+                    + "&nbsp;<b>Implicit:</b>&nbsp;" + modeHtml + "</html>");
         });
     }
 

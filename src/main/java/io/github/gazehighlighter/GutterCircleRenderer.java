@@ -37,7 +37,7 @@ public class GutterCircleRenderer extends GutterIconRenderer {
 
     @Override public @NotNull Icon getIcon() { return ICON; }
     @Override public @NotNull Alignment getAlignment() { return Alignment.LEFT; }
-    @Override public @Nullable String getTooltipText() { return "GazeAIDE: current gaze line"; }
+    @Override public @Nullable String getTooltipText() { return "Implicit: current gaze line"; }
     @Override public boolean equals(Object o) { return o instanceof GutterCircleRenderer; }
     @Override public int hashCode() { return GutterCircleRenderer.class.hashCode(); }
 }

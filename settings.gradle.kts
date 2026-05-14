@@ -1,1 +1,1 @@
-rootProject.name = "gaze-highlighter"
+rootProject.name = "implicit-gaze"

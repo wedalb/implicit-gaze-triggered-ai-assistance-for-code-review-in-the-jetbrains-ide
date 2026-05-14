@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 
 /**
- * Block inlay that renders the GazeAIDE explanation with a small robot badge
+ * Block inlay that renders the Implicit explanation with a small robot badge
  * so the user can clearly distinguish it from actual code comments.
  *
  * Layout:  [ 🤖 badge ] | explanation text in italic
