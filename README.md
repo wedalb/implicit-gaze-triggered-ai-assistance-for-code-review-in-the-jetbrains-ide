@@ -30,32 +30,42 @@ The optional dependency on the CodeGRITS plugin (`io.github.codegrits`) is a pla
 ## Requirements
 
 - **PyCharm** 2023.1 or later (Community or Professional) — also works in other JetBrains IDEs
-- **Java 17** — PyCharm ships a bundled JDK; see [Using the bundled JDK](#using-the-bundled-jdk) below
-- **Gradle 8.6** — fetched automatically by `setup.sh`
-- **OpenAI API key** — required only for the AI explanation feature
+- **OpenAI API key** — required for the AI explanation feature
 
 ---
 
 ## Installation
 
-### 1. Clone the repository
+### Option A — Download from Releases (recommended)
+
+1. Go to the [Releases page](../../releases) and download the latest `.zip`
+2. Open PyCharm → **Settings / Preferences** → **Plugins**
+3. Click the gear icon ⚙ → **Install Plugin from Disk…**
+4. Select the downloaded ZIP and restart PyCharm when prompted
+5. Set your OpenAI API key:
+   ```bash
+   export OPENAI_API_KEY="sk-..."
+   ```
+   Add this to your `~/.zshrc` or `~/.bash_profile` to make it permanent.
+
+### Option B — Build from source
+
+#### 1. Clone the repository
 
 ```bash
 git clone https://github.com/wedalb/implicit-gaze.git
 cd implicit-gaze
 ```
 
-### 2. Set your OpenAI API key
-
-The plugin reads the key from the environment variable `OPENAI_API_KEY`.
+#### 2. Set your OpenAI API key
 
 ```bash
 export OPENAI_API_KEY="sk-..."
 ```
 
-To make this permanent, add the line above to your `~/.zshrc` or `~/.bash_profile`.
+Add this to your `~/.zshrc` or `~/.bash_profile` to make it permanent.
 
-### 3. Bootstrap Gradle
+#### 3. Bootstrap Gradle
 
 Run the provided setup script once to download Gradle and generate the wrapper:
 
@@ -66,7 +76,7 @@ chmod +x setup.sh
 
 The script automatically detects PyCharm's bundled JDK. If it cannot find it, set `JAVA_HOME` manually first (see [Using the bundled JDK](#using-the-bundled-jdk)).
 
-### 4. Build the plugin
+#### 4. Build the plugin
 
 ```bash
 ./gradlew buildPlugin
@@ -78,7 +88,7 @@ This produces a distributable ZIP at:
 build/distributions/implicit-gaze-0.1.0.zip
 ```
 
-### 5. Install in PyCharm
+#### 5. Install in PyCharm
 
 1. Open PyCharm → **Settings / Preferences** → **Plugins**
 2. Click the gear icon ⚙ → **Install Plugin from Disk…**
@@ -87,7 +97,7 @@ build/distributions/implicit-gaze-0.1.0.zip
 
 ---
 
-## Using the bundled JDK
+#### Using the bundled JDK
 
 If `setup.sh` cannot locate Java automatically, point it to PyCharm's bundled JDK:
 
