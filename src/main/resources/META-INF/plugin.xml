@@ -1,18 +1,32 @@
 <idea-plugin>
     <id>io.github.gazehighlighter</id>
     <name>Implicit: Gaze-Triggered AI Assistance for Code Review</name>
-    <version>0.2.0</version>
+    <version>0.3.0</version>
     <vendor>Research</vendor>
 
     <description><![CDATA[
-        Gaze-triggered AI assistance for code review, inspired by the
-        <a href="https://github.com/codegrits/CodeGRITS">CodeGRITS</a> research toolkit.<br/><br/>
-        Simulates eye-tracking using mouse dwell time as a proxy for gaze.<br/><br/>
-        <b>Reading mode</b> — mouse is moving; a circle marks the current line in the gutter.<br/>
-        <b>Explaining mode</b> — mouse rests 3 s; the line is highlighted and GPT-4o-mini
-        explains it inline using the surrounding function as context.<br/><br/>
-        Prototype for the <b>Implicit</b> project. AI-generated — may contain errors.<br/>
-        Requires <code>OPENAI_API_KEY</code> environment variable for AI explanations.
+        Gaze-triggered AI assistance for code review in <b>IntelliJ IDEA</b> and other JetBrains
+        IDEs, inspired by the <a href="https://github.com/codegrits/CodeGRITS">CodeGRITS</a>
+        research toolkit.<br/><br/>
+        Tracks where you are reading and uses it to drive inline AI explanations. Choose the
+        gaze input source under <b>Settings → Tools → Implicit Gaze</b>:<br/>
+        <ul>
+          <li><b>Mouse</b> — mouse dwell as a proxy for gaze (no hardware needed).</li>
+          <li><b>Webcam eye tracker</b> — real gaze from
+          <a href="https://github.com/wgnrto/uniteye">UnitEye</a>'s browser pipeline (webcam →
+          MediaPipe → EyeMU), run in a hidden embedded browser, smoothed and corrected with an
+          on-screen calibration, and mapped to the code line you are looking at.</li>
+        </ul>
+        <b>Reading mode</b> — gaze is moving; a circle marks the current line in the gutter.<br/>
+        <b>Explaining mode</b> — gaze rests 3 s; the line is highlighted and the configured
+        AI model explains it inline using the surrounding function as context.<br/><br/>
+        <b>Record and export gaze sessions:</b> start/stop recording from the status bar widget,
+        then export the session as CSV, JSON, or a self-contained HTML heatmap/replay page to see
+        exactly where you looked.<br/><br/>
+        The AI layer is model-agnostic: choose OpenAI, Groq, Cerebras, a local Mellum/Ollama
+        server, or any custom OpenAI-compatible endpoint under
+        <b>Settings → Tools → Implicit AI</b>.<br/><br/>
+        Prototype for the <b>Implicit</b> project. AI-generated — may contain errors.
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
@@ -20,7 +34,38 @@
 
     <extensions defaultExtensionNs="com.intellij">
 
-        <!-- Startup: attach mouse listeners to all editors -->
+        <!-- Application service: model-agnostic AI provider settings -->
+        <applicationService
+            serviceImplementation="io.github.gazehighlighter.AiSettings"/>
+
+        <!-- Settings UI: Settings → Tools → Implicit AI -->
+        <applicationConfigurable
+            parentId="tools"
+            id="io.github.gazehighlighter.ai.settings"
+            displayName="Implicit AI"
+            instance="io.github.gazehighlighter.AiSettingsConfigurable"/>
+
+        <!-- Application service: gaze input source (mouse vs. webcam) -->
+        <applicationService
+            serviceImplementation="io.github.gazehighlighter.GazeInputSettings"/>
+
+        <!-- Application service: owns the embedded-browser UnitEye gaze pipeline -->
+        <applicationService
+            serviceImplementation="io.github.gazehighlighter.UniteyeGazeService"/>
+
+        <!-- Settings UI: Settings → Tools → Implicit Gaze (input source) -->
+        <applicationConfigurable
+            parentId="tools"
+            id="io.github.gazehighlighter.gaze.settings"
+            displayName="Implicit Gaze"
+            instance="io.github.gazehighlighter.GazeInputConfigurable"/>
+
+        <!-- Notifications for webcam tracker status / fallback -->
+        <notificationGroup
+            id="Implicit Gaze"
+            displayType="BALLOON"/>
+
+        <!-- Startup: attach gaze listeners to all editors; resume webcam if enabled -->
         <postStartupActivity
             implementation="io.github.gazehighlighter.GazeHighlighterStartupActivity"/>
 
@@ -28,11 +73,43 @@
         <projectService
             serviceImplementation="io.github.gazehighlighter.GazeModeService"/>
 
-        <!-- Status bar widget: ● GAZEAIDE: Reading / Explaining -->
+        <!-- Project service: per-editor gaze engines + screen→line routing -->
+        <projectService
+            serviceImplementation="io.github.gazehighlighter.GazeDispatcher"/>
+
+        <!-- Project service: buffers GazeEvents while a recording session is active -->
+        <projectService
+            serviceImplementation="io.github.gazehighlighter.GazeRecordingService"/>
+
+        <!-- Status bar widget: ● GAZEAIDE: Reading / Explaining (+ ● REC indicator) -->
         <statusBarWidgetFactory
             id="Implicit"
             implementation="io.github.gazehighlighter.GazeStatusBarWidgetFactory"
             order="first"/>
 
     </extensions>
+
+    <actions>
+        <group id="io.github.gazehighlighter.RecordingGroup" text="Implicit Gaze Recording"
+               description="Record and export gaze sessions" popup="true">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <action id="io.github.gazehighlighter.StartRecording"
+                    class="io.github.gazehighlighter.StartGazeRecordingAction"
+                    text="Start Gaze Recording"
+                    description="Start recording gaze/reading events for the current project"/>
+            <action id="io.github.gazehighlighter.StopRecording"
+                    class="io.github.gazehighlighter.StopGazeRecordingAction"
+                    text="Stop Gaze Recording"
+                    description="Stop the current gaze recording session"/>
+            <separator/>
+            <action id="io.github.gazehighlighter.ExportSession"
+                    class="io.github.gazehighlighter.ExportGazeSessionAction"
+                    text="Export Report…"
+                    description="Stop (if needed) and export the recorded gaze session as CSV, JSON, and an HTML heatmap/replay page"/>
+            <action id="io.github.gazehighlighter.ReadReport"
+                    class="io.github.gazehighlighter.ReadGazeSessionReportAction"
+                    text="Read Report"
+                    description="Stop (if needed) and show a summary of the recorded gaze session in the IDE"/>
+        </group>
+    </actions>
 </idea-plugin>

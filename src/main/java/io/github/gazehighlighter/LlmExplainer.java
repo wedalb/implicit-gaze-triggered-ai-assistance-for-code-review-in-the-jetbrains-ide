@@ -11,15 +11,18 @@ import java.time.Duration;
 import java.util.function.Consumer;
 
 /**
- * Sends the gazed line + function context (+ most-focused word) to
- * OpenAI gpt-4o-mini and returns a short, targeted explanation.
+ * Sends the gazed line + function context (+ most-focused word) to the user's configured
+ * AI provider and returns a short, targeted explanation.
  *
- * Key lookup order: JVM system property -DOPENAI_API_KEY → env var OPENAI_API_KEY.
+ * <p>The provider, model and base URL come from {@link AiSettings} (Settings → Tools →
+ * Implicit AI). Any OpenAI-compatible Chat Completions endpoint works — OpenAI, Groq,
+ * Cerebras, a local Ollama/Mellum server, or a custom provider.
+ *
+ * <p>Key lookup: PasswordSafe entry for the active provider → (OpenAI only) legacy
+ * {@code -DOPENAI_API_KEY} system property / {@code OPENAI_API_KEY} env var. Local
+ * providers (e.g. Ollama) may run without any key.
  */
 public class LlmExplainer {
-
-    private static final String API_URL = "https://api.openai.com/v1/chat/completions";
-    private static final String MODEL   = "gpt-4o-mini";
 
     private static final HttpClient HTTP = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
@@ -28,24 +31,42 @@ public class LlmExplainer {
     /** Fires async; {@code onResult} is always called on the EDT. */
     public static void explain(String targetLine, String functionContext,
                                @Nullable String focusedWord, Consumer<String> onResult) {
-        String apiKey = System.getProperty("OPENAI_API_KEY");
-        if (apiKey == null || apiKey.isBlank()) apiKey = System.getenv("OPENAI_API_KEY");
-        if (apiKey == null || apiKey.isBlank()) {
-            deliver(onResult, "Set OPENAI_API_KEY in Help → Edit VM Options");
+        AiSettings settings = AiSettings.getInstance();
+        AiSettings.ProviderConfig provider = settings.getActive();
+        if (provider == null || provider.baseUrl == null || provider.baseUrl.isBlank()) {
+            deliver(onResult, "No AI provider configured — see Settings → Tools → Implicit AI");
+            return;
+        }
+
+        String apiKey = settings.getApiKey(provider.id);
+        if ((apiKey == null || apiKey.isBlank()) && "openai".equals(provider.id)) {
+            apiKey = System.getProperty("OPENAI_API_KEY");
+            if (apiKey == null || apiKey.isBlank()) apiKey = System.getenv("OPENAI_API_KEY");
+        }
+        boolean local = isLocal(provider.baseUrl);
+        if ((apiKey == null || apiKey.isBlank()) && !local) {
+            deliver(onResult, "Set the " + provider.displayName
+                    + " API key in Settings → Tools → Implicit AI");
             return;
         }
 
         final String key = apiKey;
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             try {
-                deliver(onResult, request(key, targetLine, functionContext, focusedWord));
+                deliver(onResult, request(provider, key, targetLine, functionContext, focusedWord));
             } catch (Exception e) {
                 deliver(onResult, "Error: " + e.getMessage());
             }
         });
     }
 
-    private static String request(String apiKey, String line, String context,
+    /** Treat loopback hosts as local — they typically need no Authorization header. */
+    private static boolean isLocal(String url) {
+        return url.contains("localhost") || url.contains("127.0.0.1") || url.contains("0.0.0.0");
+    }
+
+    private static String request(AiSettings.ProviderConfig provider, @Nullable String apiKey,
+                                  String line, String context,
                                   @Nullable String focusedWord) throws Exception {
         String sys  = escapeJson(
             "You explain a single code line in one short sentence (max 15 words). " +
@@ -66,19 +87,22 @@ public class LlmExplainer {
 
         String user = escapeJson(userSb.toString());
 
-        String body = "{\"model\":\"" + MODEL + "\",\"max_tokens\":80,"
+        int maxTokens = provider.maxTokens > 0 ? provider.maxTokens : 80;
+        String body = "{\"model\":\"" + escapeJson(provider.model) + "\",\"max_tokens\":" + maxTokens + ","
                     + "\"messages\":["
                     + "{\"role\":\"system\",\"content\":\"" + sys + "\"},"
                     + "{\"role\":\"user\",\"content\":\"" + user + "\"}"
                     + "]}";
 
-        HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(API_URL))
-                .header("Authorization", "Bearer " + apiKey)
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(provider.baseUrl))
                 .header("Content-Type", "application/json")
                 .timeout(Duration.ofSeconds(20))
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build();
+                .POST(HttpRequest.BodyPublishers.ofString(body));
+        if (apiKey != null && !apiKey.isBlank()) {
+            builder.header("Authorization", "Bearer " + apiKey);
+        }
+        HttpRequest req = builder.build();
 
         HttpResponse<String> resp = HTTP.send(req, HttpResponse.BodyHandlers.ofString());
         if (resp.statusCode() != 200)

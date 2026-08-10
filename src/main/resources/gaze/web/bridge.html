@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Implicit — UnitEye gaze bridge</title>
+  <style>
+    html, body { margin: 0; background: #0d1117; color: #8b949e; font: 12px monospace; padding: 8px; }
+  </style>
+</head>
+<body>
+  <!--
+    Headless bridge between the vendored UnitEye browser pipeline (uniteye-core.js /
+    uniteye-cv.js, from https://github.com/wgnrto/uniteye, GPL-3.0) and the plugin's Java side.
+
+    Served over http://127.0.0.1:<port>/ by UniteyeGazeService (getUserMedia needs a real HTTP
+    origin — loopback counts as a secure context, but file:// and data: URLs do not, and cannot
+    call getUserMedia at all).
+
+    Protocol posted to window.implicitBridge(line), one line per call, mirroring the plain-text
+    contract the plugin already speaks on the Java side:
+      READY            tracker started sampling
+      OK <x> <y>       valid gaze sample, top-left-origin OS screen pixels
+      BAD              no face this frame — ignored
+      ERR <message>    fatal error -> plugin notifies and falls back to mouse
+
+    window.implicitBridge is injected by Java (UniteyeGazeService) via CefBrowser.executeJavaScript
+    after the page loads. Since that happens well before the multi-second model/camera init below
+    completes, the queue below is just cheap insurance against a theoretical race.
+  -->
+  <div id="status">starting…</div>
+  <script src="uniteye-core.js"></script>
+  <script type="module">
+    function line(s) {
+      if (typeof window.implicitBridge === 'function') {
+        window.implicitBridge(s);
+      } else {
+        (window.__implicitQueue = window.__implicitQueue || []).push(s);
+      }
+    }
+
+    const statusEl = document.getElementById('status');
+    const params = new URLSearchParams(window.location.search);
+    const mock = params.get('mock') === '1';
+
+    async function boot() {
+      try {
+        const { UnitEyeWeb } = await import('./uniteye-cv.js');
+        const engine = new UnitEyeWeb({
+          mock,
+          modelUrl: 'models/eyemu.onnx',
+          // Map gaze onto real OS screen pixels (what GazeDispatcher.routeScreenPoint expects),
+          // not this hidden page's own viewport size.
+          screenW: window.screen.width,
+          screenH: window.screen.height,
+          onGaze: (finalGaze, raw, blink, facePresent) => {
+            if (!facePresent) { line('BAD'); return; }
+            line('OK ' + Math.round(finalGaze.x) + ' ' + Math.round(finalGaze.y));
+          },
+        });
+        await engine.init();
+        engine.start();
+        window.__implicitEngine = engine;
+        statusEl.textContent = 'running' + (mock ? ' (mock/mouse)' : ' (webcam)');
+        line('READY');
+      } catch (e) {
+        const msg = (e && e.message) ? e.message : String(e);
+        statusEl.textContent = 'error: ' + msg;
+        line('ERR ' + msg);
+      }
+    }
+
+    boot();
+  </script>
+</body>
+</html>

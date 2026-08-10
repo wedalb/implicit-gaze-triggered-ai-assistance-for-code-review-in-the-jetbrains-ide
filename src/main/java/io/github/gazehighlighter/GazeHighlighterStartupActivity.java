@@ -21,7 +21,7 @@ public class GazeHighlighterStartupActivity implements StartupActivity.DumbAware
             }
         }
 
-        // Attach to every editor opened from now on
+        // Attach to / detach from editors created or released from now on
         factory.addEditorFactoryListener(new EditorFactoryListener() {
             @Override
             public void editorCreated(@NotNull EditorFactoryEvent event) {
@@ -30,11 +30,26 @@ public class GazeHighlighterStartupActivity implements StartupActivity.DumbAware
                     attach(editor, project);
                 }
             }
+
+            @Override
+            public void editorReleased(@NotNull EditorFactoryEvent event) {
+                Editor editor = event.getEditor();
+                if (project.equals(editor.getProject())) {
+                    GazeDispatcher.getInstance(project).unregister(editor);
+                }
+            }
         }, project);
+
+        // If the user left the plugin in webcam mode, bring the tracker back up.
+        if (GazeInputSettings.getInstance().getInputMode() == GazeInputMode.WEBCAM) {
+            UniteyeGazeService.getInstance().applyMode(GazeInputMode.WEBCAM);
+        }
     }
 
     private void attach(Editor editor, Project project) {
-        GazeMouseListener listener = new GazeMouseListener(editor, project);
-        editor.addEditorMouseMotionListener(listener, project);
+        GazeDispatcher dispatcher = GazeDispatcher.getInstance(project);
+        dispatcher.register(editor, project);
+        // Mouse source: a thin adapter that forwards to the engine only in mouse mode.
+        editor.addEditorMouseMotionListener(new GazeMouseListener(editor, dispatcher), project);
     }
 }
